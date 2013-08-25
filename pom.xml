@@ -1,8 +1,60 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<!-- maven command example
+package:
+mvn clean test package
+
+deploy snapshot: (altDeploymentRepository)
+mvn clean test package deploy -P deploy-snapshot -P deploy-source -U
+
+deploy release: (altDeploymentRepository)
+mvn clean test package deploy -P deploy-release -P deploy-source -U
+
+deploy tomcat: (tomcat-manager-url, tomcat-server-id, tomcat-deploy-path)
+mvn clean test package tomcat:deploy -P deploy-tomcat -U
+
+package single jar: (mainClass)
+mvn clean test package -P deploy-single -U
+
+config settings.xml
+<settings>
+	<profiles>
+		<profile>
+			<id>deploy-release</id>
+			<properties>
+				<altDeploymentRepository>nexus::default::http://NEXUS-HOST:NEXUS-PORT/nexus/content/repositories/releases</altDeploymentRepository>
+			</properties>
+		</profile>
+		<profile>
+			<id>deploy-snapshot</id>
+			<properties>
+				<altDeploymentRepository>nexus::default::http://NEXUS-HOST:NEXUS-PORT/nexus/content/repositories/snapshots</altDeploymentRepository>
+			</properties>
+		</profile>
+		<profile>
+			<id>deploy-tomcat</id>
+			<properties>
+				<tomcat-manager-url>http://TOMCAT-HOST:TOMCAT-PORT/manager/text</tomcat-manager-url>
+			</properties>
+		</profile>
+	</profiles>
+	<servers>
+		<server>
+			<id>nexus</id>
+			<username>NEXUS-DEPLOY-USER</username>
+			<password>NEXUS-DEPLOY-PASS</password>
+		</server>
+		<server>
+			<id>tomcat</id>
+			<username>TOMCAT-DEPLOY-USER</username>
+			<password>TOMCAT-DEPLOY-PASS</password>
+		</server>
+	</servers>
+</settings>
+-->
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.tsaikd.java</groupId>
 	<artifactId>KDJLib_parent</artifactId>
-	<version>0.0.10</version>
+	<version>0.0.11</version>
 	<packaging>pom</packaging>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -63,6 +115,11 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
 					<version>2.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-shade-plugin</artifactId>
+					<version>2.1</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -163,6 +220,35 @@
 		</plugins>
 	</build>
 	<profiles>
+		<profile>
+			<id>deploy-single</id>
+			<properties>
+				<mainClass></mainClass>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-shade-plugin</artifactId>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>shade</goal>
+								</goals>
+								<configuration>
+									<transformers>
+										<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+											<mainClass>${mainClass}</mainClass>
+										</transformer>
+									</transformers>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<profile>
 			<id>deploy-source</id>
 			<build>
